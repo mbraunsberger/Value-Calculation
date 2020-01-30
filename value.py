@@ -15,7 +15,7 @@ current_week = 25
 # downloads all games from a given week
 # --------------------------------------------------
 def url_download_game(url, week):
-    week_url = get_url(url, week)
+    week_url = get_url(url, week, 1)
     r = requests.get(week_url)
     soup = BeautifulSoup(r.text, 'html.parser')
     table = soup.find('table', {"class": "standard_tabelle"})
@@ -33,12 +33,24 @@ def url_download_game(url, week):
 # --------------------------------------------------
 # downloads the table
 # --------------------------------------------------
-def url_download_table(url, week):
-    week_url = get_url(url, week)
+def url_download_table(url, week, mode):
+    week_url = get_url(url, week, mode)
     r = requests.get(week_url)
     soup = BeautifulSoup(r.text, 'html.parser')
-    tables = soup.findAll('table', {"class": "standard_tabelle"})
-    table_row = tables[1].find_all('tr')
+    if mode == 1:
+        table_file.write("Tabelle\n")
+        tables = soup.findAll('table', {"class": "standard_tabelle"})
+        table_row = tables[1].find_all('tr')
+
+    elif ((mode == 2) or (mode == 3)):
+        if mode == 2:
+            table_file.write("Heim\n")
+        elif mode == 3:
+            table_file.write("Auswaerts\n")
+
+        table = soup.find('table', {"class": "standard_tabelle"})
+        table_row = table.find_all('tr')
+
     for tr in table_row:
         td = tr.find_all('td')
         row = [i.text for i in td]
@@ -51,8 +63,13 @@ def url_download_table(url, week):
 # --------------------------------------------------
 # creates the url string for one week
 # --------------------------------------------------
-def get_url(base, number):
-    hole_string = base + str(number) + "/"
+def get_url(base, number, mode):
+    if mode == 1:
+        hole_string = base + str(number) + "/"
+    elif mode == 2:
+        hole_string = base + str(number) + "/heim/"
+    elif mode == 3:
+        hole_string = base + str(number) + "/auswaerts/"
     return hole_string
 
 
@@ -86,7 +103,7 @@ def write_in_table_file(table_list):
 
 
 # --------------------------------------------------
-# loads all games from 1st week till current week
+# loads all games from first till current week
 # --------------------------------------------------
 def download_games():
     for index in range(1, current_week):
@@ -102,7 +119,9 @@ def download_games():
 # loads the current table from a given league
 # --------------------------------------------------
 def download_league_table():
-    url_download_table(url_premiere_league_base, (current_week-1))
+    url_download_table(url_premiere_league_base, (current_week-1), 1) # download of the current table
+    url_download_table(url_premiere_league_base, (current_week-1), 2) # download of the current home table
+    url_download_table(url_premiere_league_base, (current_week-1), 3) # download of the current visitor table
 
 
 
